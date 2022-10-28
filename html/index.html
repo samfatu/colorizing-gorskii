@@ -1,0 +1,703 @@
+<html>
+  <style>
+    /* Slideshow container */
+    .slideshow-container {
+      max-width: 1000px;
+      position: relative;
+      margin: auto;
+      border-style: solid;
+      border-color: #ddd;
+    }
+
+    /* Hide the images by default */
+    .betterAligned,
+    .poorlyAligned,
+    .afterLaplacian,
+    .afterGamma,
+    .afterEq,
+    .afterSharp {
+      display: none;
+      padding-left: 30px;
+      padding-right: 30px;
+    }
+
+    /* Next & previous buttons */
+    .prev, .next {
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      width: auto;
+      margin-top: -22px;
+      padding: 16px;
+      background-color: #ddd;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      transition: 0.6s ease;
+      border-radius: 0 3px 3px 0;
+      user-select: none;
+    }
+
+    /* Position the "next button" to the right */
+    .next {
+      right: 0;
+      border-radius: 3px 0 0 3px;
+    }
+
+    /* On hover, add a black background color with a little bit see-through */
+    .prev:hover, .next:hover {
+      background-color: rgba(0,0,0,0.8);
+    }
+
+    /* Caption text */
+    .text {
+      color: #f2f2f2;
+      font-size: 15px;
+      padding: 8px 12px;
+      position: absolute;
+      bottom: 8px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Number text (1/3 etc) */
+    .numbertext {
+      color: #f2f2f2;
+      font-size: 12px;
+      padding: 8px 12px;
+      position: absolute;
+      top: 0;
+    }
+
+    /* The dots/bullets/indicators */
+    .betterAlignedDots,
+    .poorlyAlignedDots,
+    .afterLaplacianDots,
+    .afterGammaDots,
+    .afterEqDots,
+    .afterSharpDots {
+      cursor: pointer;
+      height: 15px;
+      width: 15px;
+      margin: 0 2px;
+      background-color: #ddd;
+      border-radius: 50%;
+      display: inline-block;
+      transition: background-color 0.25s ease;
+    }
+
+    .active, .dot:hover {
+      background-color: #545454;
+    }
+
+    /* Fading animation */
+    .fade {
+      animation-name: fade;
+      animation-duration: 0.5s;
+    }
+
+    @keyframes fade {
+      from {opacity: .4}
+      to {opacity: 1}
+    }
+    #gallery {
+      line-height:0;
+      -webkit-column-count:2; /* split it into 5 columns */
+      -webkit-column-gap:5px; /* give it a 5px gap between columns */
+      -moz-column-count:2;
+      -moz-column-gap:5px;
+      column-count:2;
+      column-gap:5px;
+    }
+    #gallery img {
+      width: 100% !important;
+      height: auto !important;
+      margin-bottom:5px; /* to match column gap */
+      border-style: dashed;
+      border-color: #ddd;
+    }
+    @media (max-width: 1200px) {
+      #gallery {
+        -moz-column-count:    2;
+        -webkit-column-count: 2;
+        column-count:         2;
+      }
+    }
+
+    @media (max-width: 1000px) {
+      #gallery {
+        -moz-column-count:    1;
+        -webkit-column-count: 1;
+        column-count:         1;
+      }
+    }
+  </style>
+  <body>
+    <h1>Images of the Russian Empire: Colorizing the Prokudin-Gorskii Photo Collection</h1>
+    <p>Report prepared by <b>Mustafa Can Genç - 21827426</b></p>
+
+    <h2>Overview</h2>
+    <p>&emsp;Russian photographer Sergey Prokudin-Gorskii is undoubtedly one of the most important figures in the history of photography. Working with famous scientists on color photography, he developed the first techniques of color photography.</p>
+    <p>&emsp;Prokudin-Gorskii used a camera that exposed one oblong glass plate three times in rapid succession through three different color filters: blue, green, and red. For formal presentations, the negative plate was placed in a triple lens lantern so the three exposures could be superimposed to form a full color image on a screen. Due to the brief time lapse between the fixation of the three frames on the plate, the perspective is slightly distorted to a varying degrees on the final image and results in random shimmers of color.</p>
+    <div style="display:flex;align-items:center;justify-content:center;flex-direction: row;">
+      <figure style="display:flex; flex-direction: column; align-items: center">
+        <img src="./images/others/emir.jpg"  />
+        <figcaption>Fig.1 - The Emir of Bukhara in a 1911 color photograph by Sergei Mikhailovich Prokudin-Gorskii. We can clearly see the three color space representation on thre right. Courtesy Library of Congress and Wikipedia.</figcaption>
+      </figure>
+    </div>
+
+    <h2>Objective</h2>
+    <p>&emsp;The objective of this project was to combine three color channel pictures from digitized Prokudin-Gorskii glass plate photos to create a single colorized image (red, green, blue). We want to utilize the blue picture as a reference and align the red and green photos to the blue in each glass plate image since each glass plate image consists of three vertically successive color images.</p>
+
+    <h2>Approach</h2>
+    <p>&emsp;First of all, I divided the given input photo into 3 equal parts vertically and set each part as a channel and we got an image in the BGR color palette. The code block below does this.</p>
+    <pre style="background-color:lightgray">
+      <code>
+        def get_image_channels(image):
+          img_height, img_width = image.shape
+          channel_height = img_height // 3
+
+          image_with_channels = np.zeros((channel_height, img_width, 3), dtype='uint8')
+
+          image_with_channels[:,:,0] = image[0:channel_height, :]   # Blue channel
+          image_with_channels[:,:,1] = image[channel_height:channel_height * 2, :]   # Green channel
+          image_with_channels[:,:,2] = image[channel_height * 2:channel_height * 3, :]   # Red channel
+
+          # Image with all channels set and with color palette BGR
+          return image_with_channels
+      </code>
+    </pre>
+
+    <div style="display:flex;align-items:center;justify-content:center;flex-direction: row;">
+      <figure style="display:flex; flex-direction: column; align-items: center">
+        <img src="./images/others/borders.png" width="405" height="360" />
+        <figcaption>Fig.2 - Combined channels of the image.</figcaption>
+      </figure>
+      <figure style="display:flex; flex-direction: column; align-items: center">
+        <img src="./images/others/cropped.png" width="405" height="360" />
+        <figcaption>Fig.3 - Redundant borders cropped.</figcaption>
+      </figure>
+    </div>
+
+    <p>&emsp;Later, I saw that there were unnecessary black parts on the edges of the photo that we obtained, which may disrupt the calculation process and are not related to the photo. Since these parts are in different sizes and thicknesses in each photograph, I had to cut with a single general method. For this reason, as can be seen from the code block below, I applied a cutting process to subtract five percent from the height and width of each photo.</p>
+    <pre style="background-color:lightgray">
+      <code>
+        def crop_borders(image, rate = 0.05):
+          height = image.shape[0]
+          width = image.shape[1]
+
+          height_crop_pixel = int(height * rate)
+          width_crop_pixel = int(width * rate)
+
+          return image[height_crop_pixel : height - height_crop_pixel, width_crop_pixel : width - width_crop_pixel, :]
+      </code>
+    </pre>
+
+    <p>&emsp;The next step is to align each channel of the image with the edges cut off. To do this, we need to fix one color
+      channel and align the others accordingly.
+      I chose the blue (B) channel as the fixed channel. Other color channels are aligned with respect to blue.
+      Both green and red channels are processed one by one. In order to calculate the best alignment between the two channels,
+      we keep one channel fixed and slide the other channel right and left on it, and select the shift with the lowest error.
+      To do this programmatically, I selected a 15 by 15 pixel window and calculated the difference of the two channels for
+      225 different alignments with the sum of squared differences (SSD) method.
+    </p>
+    <p>&emsp;SSD is simply squaring all pixels of two channels by matrix difference and summing for all pixels. The result of
+      this operation shows us how different the two input channels are from each other. If we choose the least among these
+      results, we choose the two channels that align best with each other.
+    </p>
+    <pre style="background-color:lightgray">
+      <code>
+        def calculate_difference(channel1, shifted_channel2):
+          return np.sum(np.square(channel1 - shifted_channel2))
+      </code>
+    </pre>
+    <p>&emsp;
+      After calculating this calculation for the B channel fixed and the G channel and finding the amount we need to shift, we
+      do the same for the R channel with the B channel fixed, and we have both the pixel values that we need to shift G
+      according to B and R according to B. The pixel values we need to shift are found.
+    </p>
+    <p>&emsp;The only remaining process is to shift these shift values with the numpy library's roll function for the G and R
+      channel. In the final stage, we have the shifted G and R channels and the original B channel. Finally, we complete
+      the alignment process by combining these three channels.
+    </p>
+
+    <pre style="background-color:lightgray">
+      <code>
+        def calculate_ssd(channel1, channel2):
+          window_size = 15
+          coordinates = []
+          min_distance = float('inf')   # Start with a huge number
+
+          for i in np.arange(-window_size, window_size):
+            for j in np.arange(-window_size, window_size):
+              shift_channel2 = np.roll(channel2, [i, j], axis=(0, 1))
+              distance = calculate_difference(channel1, shift_channel2)
+
+              if distance <= min_distance:
+                min_distance = distance
+                coordinates = [i, j]
+
+          return coordinates
+
+        def match_channels(image, isLaplacian):
+          b, g, r = split_image_to_channels(image)
+
+          R2B_coordinates = calculate_ssd(b, r, isLaplacian)
+          G2B_coordinates = calculate_ssd(b, g, isLaplacian)
+
+          print(f'Red channel shifted by: {R2B_coordinates}\tGreen channel shifted by: {G2B_coordinates}')
+
+          alignedG = np.roll(g, G2B_coordinates, axis=(0, 1))
+          alignedR = np.roll(r, R2B_coordinates, axis=(0, 1))
+
+          return np.dstack([alignedR, alignedG ,b])
+      </code>
+    </pre>
+
+
+    <h3>First Trials</h3>
+    <p>&emsp;While doing the first trials of the application, I encountered many anomalies.
+       Although the algorithm I developed gave good results in some photos in the dataset,
+       it could not align exactly in many photos. In some photos, it even produced a bad alignment result from its original state.
+        You can also see a few successful and unsuccessful alignments in the photo gallery below.
+    </p>
+
+    <!-- Slideshow container -->
+    <div class="slideshow-container">
+      <h4 style="text-align: center">Better aligned images</h4>
+
+      <!-- Full-width images with number and caption text -->
+      <div class="betterAligned fade">
+        <img src="./images/others/FT_00163v.jpg" style="width:100%">
+      </div>
+
+      <div class="betterAligned fade">
+        <img src="./images/others/FT_00194v.jpg" style="width:100%">
+      </div>
+
+      <div class="betterAligned fade">
+        <img src="./images/others/FT_01031v.jpg" style="width:100%">
+      </div>
+
+      <div class="betterAligned fade">
+        <img src="./images/others/FT_01167v.jpg" style="width:100%">
+      </div>
+
+      <!-- Next and previous buttons -->
+      <a class="prev" onclick="plusSlides(-1, 0)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1, 0)">&#10095;</a>
+    </div>
+    <br>
+    <!-- The dots/circles -->
+    <div style="text-align:center">
+      <span class="betterAlignedDots" onclick="currentSlide(1, 0)"></span>
+      <span class="betterAlignedDots" onclick="currentSlide(2, 0)"></span>
+      <span class="betterAlignedDots" onclick="currentSlide(3, 0)"></span>
+      <span class="betterAlignedDots" onclick="currentSlide(4, 0)"></span>
+    </div>
+
+    <br>
+
+        <!-- Slideshow container -->
+    <div class="slideshow-container">
+      <h4 style="text-align: center">Poorly aligned images</h4>
+
+      <!-- Full-width images with number and caption text -->
+      <div class="poorlyAligned fade">
+        <img src="./images/others/FT_00106v.jpg" style="width:100%">
+      </div>
+
+      <div class="poorlyAligned fade">
+        <img src="./images/others/FT_00137v.jpg" style="width:100%">
+      </div>
+
+      <div class="poorlyAligned fade">
+        <img src="./images/others/FT_00149v.jpg" style="width:100%">
+      </div>
+
+      <div class="poorlyAligned fade">
+        <img src="./images/others/FT_00757v.jpg" style="width:100%">
+      </div>
+
+      <!-- Next and previous buttons -->
+      <a class="prev" onclick="plusSlides(-1, 1)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1, 1)">&#10095;</a>
+    </div>
+    <br>
+    <!-- The dots/circles -->
+    <div style="text-align:center">
+      <span class="poorlyAlignedDots" onclick="currentSlide(1, 1)"></span>
+      <span class="poorlyAlignedDots" onclick="currentSlide(2, 1)"></span>
+      <span class="poorlyAlignedDots" onclick="currentSlide(3, 1)"></span>
+      <span class="poorlyAlignedDots" onclick="currentSlide(4, 1)"></span>
+    </div>
+
+    <h3>Laplacian Filtering</h3>
+    <p>&emsp;After thinking about this misalignment situation and doing research, I thought that it would be more logical to
+      look at the difference between the values of the channels with clear edges, not the difference in the color values
+      of the pixels, while comparing the channels. For this, I decided to apply Laplacian filtering as a method of
+      highlighting the edges.
+    </p>
+    <p>&emsp;
+      A Laplacian filter is an edge detector used to compute the second derivatives of an image, measuring the rate at which the
+      first derivatives change. This determines if a change in adjacent pixel values is from an edge or continuous progression.
+      Laplacian filter kernels usually contain negative values in a cross pattern, centered within the array. The corners
+      are either zero or positive values. The center value can be either negative or positive.
+    </p>
+
+    <div style="display:flex;align-items:center;justify-content:center;flex-direction: row;">
+      <figure style="display:flex; flex-direction: column; align-items: center">
+        <img src="./images/others/lap1.png" width="405" height="360" />
+        <figcaption>Fig.4 - Blue channel of an image.</figcaption>
+      </figure>
+      <figure style="display:flex; flex-direction: column; align-items: center">
+        <img src="./images/others/lap2.png" width="405" height="360" />
+        <figcaption>Fig.5 - Laplacian filter applied to the channel.</figcaption>
+      </figure>
+    </div>
+
+    <pre style="background-color:lightgray">
+      <code>
+        def calculate_ssd(channel1, channel2):
+          ...
+
+          if isLaplacian:
+            #Apply Laplacian Filtering to calculate SSD with looking at edges
+            channel1 = cv2.Laplacian(channel1, cv2.CV_64F)
+            channel2 = cv2.Laplacian(channel2, cv2.CV_64F)
+
+          ...
+      </code>
+    </pre>
+
+    <p>&emsp;After applying this technique, there was a huge difference in results. The outputs of the photos in
+      the "Poorly aligned" section above are shown in the gallery below, where they are aligned after laplacian
+      filtering is applied. I also added the photos in the "Better aligned" section to show that they are also
+      properly aligned again. It is seen that the shift values of the G and R channels also change.
+    </p>
+
+    <!-- Slideshow container -->
+    <div class="slideshow-container">
+      <h4 style="text-align: center">Aligned images after Laplacian filtering</h4>
+
+      <!-- Full-width images with number and caption text -->
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_00106v_L.jpg" style="width:100%">
+      </div>
+
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_00137v_L.jpg" style="width:100%">
+      </div>
+
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_00149v_L.jpg" style="width:100%">
+      </div>
+
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_00757v_L.jpg" style="width:100%">
+      </div>
+
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_00163v_L.jpg" style="width:100%">
+      </div>
+
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_00194v_L.jpg" style="width:100%">
+      </div>
+
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_01031v_L.jpg" style="width:100%">
+      </div>
+
+      <div class="afterLaplacian fade">
+        <img src="./images/others/LAP_01167v_L.jpg" style="width:100%">
+      </div>
+
+      <!-- Next and previous buttons -->
+      <a class="prev" onclick="plusSlides(-1, 2)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1, 2)">&#10095;</a>
+    </div>
+    <br>
+    <!-- The dots/circles -->
+    <div style="text-align:center">
+      <span class="afterLaplacianDots" onclick="currentSlide(1, 2)"></span>
+      <span class="afterLaplacianDots" onclick="currentSlide(2, 2)"></span>
+      <span class="afterLaplacianDots" onclick="currentSlide(3, 2)"></span>
+      <span class="afterLaplacianDots" onclick="currentSlide(4, 2)"></span>
+      <span class="afterLaplacianDots" onclick="currentSlide(5, 2)"></span>
+      <span class="afterLaplacianDots" onclick="currentSlide(6, 2)"></span>
+      <span class="afterLaplacianDots" onclick="currentSlide(7, 2)"></span>
+      <span class="afterLaplacianDots" onclick="currentSlide(8, 2)"></span>
+    </div>
+
+
+    <h3>Gamma Correction</h3>
+    <p>&emsp;Gamma correction can be used to control the overall brightness of an image. It can be used with
+      images that are found to be either bleached out or too dark.
+    </p>
+    <p>&emsp;While examining the dataset, I felt that the photos were generally brighter than they should be, so I
+      set the gamma value of 0.7 for gamma correction. Since this judgment of brightness is subjective, a
+      result that is good for everyone may not be reached with certainty. The photos after the gamma correction
+      process are shown comparatively in the photo gallery below.
+    </p>
+
+    <!-- Slideshow container -->
+    <div class="slideshow-container">
+      <h4 style="text-align: center">After gamma correction applied</h4>
+
+      <!-- Full-width images with number and caption text -->
+      <div class="afterGamma fade">
+        <img src="./images/others/LAP_00106v_L_G.jpg" style="width:100%">
+      </div>
+
+      <div class="afterGamma fade">
+        <img src="./images/others/LAP_00153v_L_G.jpg" style="width:100%">
+      </div>
+
+      <div class="afterGamma fade">
+        <img src="./images/others/LAP_00194v_L_G.jpg" style="width:100%">
+      </div>
+
+      <div class="afterGamma fade">
+        <img src="./images/others/LAP_01031v_L_G.jpg" style="width:100%">
+      </div>
+
+      <div class="afterGamma fade">
+        <img src="./images/others/LAP_01269v_L_G.jpg" style="width:100%">
+      </div>
+
+      <div class="afterGamma fade">
+        <img src="./images/others/LAP_10131v_L_G.jpg" style="width:100%">
+      </div>
+
+      <!-- Next and previous buttons -->
+      <a class="prev" onclick="plusSlides(-1, 3)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1, 3)">&#10095;</a>
+    </div>
+    <br>
+    <!-- The dots/circles -->
+    <div style="text-align:center">
+      <span class="afterGammaDots" onclick="currentSlide(1, 3)"></span>
+      <span class="afterGammaDots" onclick="currentSlide(2, 3)"></span>
+      <span class="afterGammaDots" onclick="currentSlide(3, 3)"></span>
+      <span class="afterGammaDots" onclick="currentSlide(4, 3)"></span>
+      <span class="afterGammaDots" onclick="currentSlide(5, 3)"></span>
+      <span class="afterGammaDots" onclick="currentSlide(6, 3)"></span>
+    </div>
+
+
+    <h3>Sharpening</h3>
+    <p>&emsp;Image sharpening is an effect applied to digital images to give them a sharper appearance.
+      The visibility of edges in an image is improved through sharpening. The photographs
+      with poor edges are the dim ones. In these photographs, the background and edges
+      hardly differ from one another. The image that has been sharpened, on the other
+      hand, is one where the edges can be seen clearly by the observer.
+    </p>
+    <p>&emsp;I applied the convolution kernel technique to give the effect of sharpening the photo. For this process,
+      I used a 3x3 convolution kernel, as can be seen in Fig.6.
+    </p>
+
+    <div style="display:flex;align-items:center;justify-content:center;flex-direction: row;">
+      <figure style="display:flex; flex-direction: column; align-items: center">
+        <img src="./images/others/matrix.png" />
+        <figcaption>Fig.6 - 3x3 convolution kernel used for sharpening filter</figcaption>
+      </figure>
+    </div>
+
+    <pre style="background-color:lightgray">
+      <code>
+        def sharpen_image(image):
+          kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+          return cv2.filter2D(image, -1, kernel)
+      </code>
+    </pre>
+
+    <p>&emsp;Although the sharpening effect distorts the image in most photos, it can
+      produce good results in photos where we want to see blurry details better and in
+      photos where we want the details of the edges and corners to be highlighted. You
+      can see examples of the first two photos in the gallery below, which gave
+      relatively good results, and the last two photos turned into distorted images.
+    </p>
+
+    <!-- Slideshow container -->
+    <div class="slideshow-container">
+      <h4 style="text-align: center">After sharpening applied</h4>
+
+      <!-- Full-width images with number and caption text -->
+      <div class="afterSharp fade">
+        <img src="./images/others/31421v_L_S.jpg" style="width:100%">
+      </div>
+
+      <div class="afterSharp fade">
+        <img src="./images/others/01269v_L_S.jpg" style="width:100%">
+      </div>
+
+      <div class="afterSharp fade">
+        <img src="./images/others/00757v_L_S.jpg" style="width:100%">
+      </div>
+
+      <div class="afterSharp fade">
+        <img src="./images/others/00088v_L_S.jpg" style="width:100%">
+      </div>
+
+      <!-- Next and previous buttons -->
+      <a class="prev" onclick="plusSlides(-1, 5)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1, 5)">&#10095;</a>
+    </div>
+    <br>
+    <!-- The dots/circles -->
+    <div style="text-align:center">
+      <span class="afterSharpDots" onclick="currentSlide(1, 5)"></span>
+      <span class="afterSharpDots" onclick="currentSlide(2, 5)"></span>
+      <span class="afterSharpDots" onclick="currentSlide(3, 5)"></span>
+      <span class="afterSharpDots" onclick="currentSlide(4, 5)"></span>
+    </div>
+
+    <h3>Histogram Equalization</h3>
+    <p>&emsp;Histogram Equalization is an image processing technique that adjusts the contrast of an image by
+      using its histogram. To enhance the image’s contrast, it spreads out the most frequent pixel intensity
+      values or stretches out the intensity range of the image. By accomplishing this, histogram equalization
+      allows the image’s areas with lower contrast to gain a higher contrast.
+    </p>
+    <p>
+      &emsp;For histogram equalization, I first converted the image from RGB color space to YUV color space. Since Y
+      channel represents brightness in YUV space, I thought it would be more logical to do the operation on this
+      channel, and I did the equalization over this channel. I used openCV's equalizeHist function for this process.
+    </p>
+    <p>
+      &emsp;This process worked well on photos that looked washed out because those photos didn't have sufficient
+      contrast. In some photos, there were cases where it distorted the image. Some photos where this process produces
+      beautiful results are shown in the gallery below.
+    </p>
+
+    <!-- Slideshow container -->
+    <div class="slideshow-container">
+      <h4 style="text-align: center">After gamma correction applied</h4>
+
+      <!-- Full-width images with number and caption text -->
+      <div class="afterEq fade">
+        <img src="./images/others/LAP_31421v_L_H.jpg" style="width:100%">
+      </div>
+
+      <div class="afterEq fade">
+        <img src="./images/others/LAP_01880v_L_H.jpg" style="width:100%">
+      </div>
+
+      <div class="afterEq fade">
+        <img src="./images/others/LAP_01522v_L_H.jpg" style="width:100%">
+      </div>
+
+      <div class="afterEq fade">
+        <img src="./images/others/LAP_01164v_L_H.jpg" style="width:100%">
+      </div>
+
+      <div class="afterEq fade">
+        <img src="./images/others/LAP_00888v_L_H.jpg" style="width:100%">
+      </div>
+
+      <!-- Next and previous buttons -->
+      <a class="prev" onclick="plusSlides(-1, 4)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1, 4)">&#10095;</a>
+    </div>
+    <br>
+    <!-- The dots/circles -->
+    <div style="text-align:center">
+      <span class="afterEqDots" onclick="currentSlide(1, 4)"></span>
+      <span class="afterEqDots" onclick="currentSlide(2, 4)"></span>
+      <span class="afterEqDots" onclick="currentSlide(3, 4)"></span>
+      <span class="afterEqDots" onclick="currentSlide(4, 4)"></span>
+      <span class="afterEqDots" onclick="currentSlide(5, 4)"></span>
+    </div>
+
+    <h2>Results</h2>
+    <p>&emsp;In this assignment, I worked on the basics of image processing. In particular, I practiced
+      subjects such as color spaces, image enhancement methods, calculating pixel values, using openCV
+      and numpy.
+    </p>
+    <p>&emsp;
+      As a result, in the developed algorithms, I have seen that aligning the edge values of the pixels in
+      the channel rather than the color values of the channels to perform channel alignment works much
+      better in many cases. Images created as a result of image enhancement methods may not have the same
+      effect in all cases. Because deciding whether an image is good or bad is a subjective matter. The
+      image enhancement methods that I have implemented can be used for each photo individually or in
+      combination with each other, according to the user's wishes and needs.
+    </p>
+
+    <h2>Result Gallery</h2>
+    <p>&emsp;Tüm çıktıların galerisi</p>
+
+    <div id="gallery">
+
+      <img src="images/others/RES_00088v_L_G.jpg">
+      <img src="images/others/RES_00106v_L_G.jpg">
+      <img src="images/others/RES_00125v_L_G.jpg">
+      <img src="images/others/RES_00137v_L_G.jpg">
+      <img src="images/others/RES_00149v_L_G.jpg">
+      <img src="images/others/RES_00153v_L_G.jpg">
+      <img src="images/others/RES_00163v_L_G.jpg">
+      <img src="images/others/RES_00194v_L_G.jpg">
+      <img src="images/others/RES_00398v_L_G.jpg">
+      <img src="images/others/RES_00458v_L_G.jpg">
+      <img src="images/others/RES_00600v_L_G.jpg">
+      <img src="images/others/RES_00757v_L_G.jpg">
+      <img src="images/others/RES_00804v_L_G.jpg">
+      <img src="images/others/RES_00888v_L_G.jpg">
+      <img src="images/others/RES_00889v_L_G.jpg">
+      <img src="images/others/RES_00907v_L_G.jpg">
+      <img src="images/others/RES_00911v_L_G.jpg">
+      <img src="images/others/RES_01031v_L_G.jpg">
+      <img src="images/others/RES_01164v_L_G.jpg">
+      <img src="images/others/RES_01167v_L_G.jpg">
+      <img src="images/others/RES_01269v_L_G.jpg">
+      <img src="images/others/RES_01522v_L_G.jpg">
+      <img src="images/others/RES_01597v_L_G.jpg">
+      <img src="images/others/RES_01598v_L_G.jpg">
+      <img src="images/others/RES_01728v_L_G.jpg">
+      <img src="images/others/RES_01880v_L_G.jpg">
+      <img src="images/others/RES_10131v_L_G.jpg">
+      <img src="images/others/RES_31421v_L_G.jpg">
+      <img src="images/others/RES_00056v_L_G.jpg">
+    </div>
+
+    <br>
+  </body>
+  <script>
+    let slideIndex = [1, 1, 1, 1, 1, 1];
+    let slideId = ["betterAligned", "poorlyAligned", "afterLaplacian", "afterGamma", "afterEq", "afterSharp"]
+    showSlides(1, 0);
+    showSlides(1, 1);
+    showSlides(1, 2);
+    showSlides(1, 3);
+    showSlides(1, 4);
+    showSlides(1, 5);
+
+    // Next/previous controls
+    function plusSlides(n, no) {
+      showSlides(slideIndex[no] += n, no);
+    }
+
+    // Thumbnail image controls
+    function currentSlide(n, no) {
+
+      showSlides(slideIndex[no] = n, no);
+    }
+
+    function showSlides(n, no) {
+      let i;
+      let x = document.getElementsByClassName(slideId[no]);
+      if (n > x.length) {
+        slideIndex[no] = 1
+      }
+      if (n < 1) {slideIndex[no] = x.length}
+      let dots = document.getElementsByClassName(slideId[no]+"Dots");
+      for (i = 0; i < x.length; i++) {
+        x[i].style.display = "none";
+      }
+      for (i = 0; i < dots.length; i++) {
+        dots[i].className = dots[i].className.replace(" active", "");
+      }
+      x[slideIndex[no] - 1].style.display = "block";
+      dots[slideIndex[no] - 1].className += " active";
+    }
+  </script>
+</html>
