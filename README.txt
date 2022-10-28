@@ -1,3 +1,5 @@
+BBM 415 - Image Processing Lab. Assignment 1
+
   The program was developed to revive the photographs taken by the Russian photographer Sergei Mikhailovich Prokudin-Gorskii with an innovative technique
 between 1909-1915 in the digital environment today.
   The program takes as input a black and white photograph in which 3 color channels are arranged in a 1:3 ratio. This photo represents the photos
