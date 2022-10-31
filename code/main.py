@@ -99,14 +99,14 @@ def equalize_histogram(image):
   return cv2.cvtColor(yuv, cv2.COLOR_YUV2RGB)
 
 def run(isLaplacian = True, gamma = False, sharpen = False, eqHistogram = False):
-  all_image_paths = get_all_images_in_directory('html/images/raw_data/')
+  all_image_paths = get_all_images_in_directory('../html/images/raw_data/')
 
   crop_rate = 0.05
 
   for image_path in all_image_paths:
     print(f'Image: {image_path}')
     outputFileName = image_path.split(".")[0] + "_L" if isLaplacian else image_path.split(".")[0]
-    image = read_image(f'html/images/raw_data/{image_path}')
+    image = read_image(f'../html/images/raw_data/{image_path}')
     colored_image = get_image_channels(image)
     cropped_image = crop_borders(colored_image, crop_rate)
     RGBmatched, G_shift_coord, R_shift_coord = match_channels(cropped_image, isLaplacian)
@@ -142,7 +142,7 @@ def run(isLaplacian = True, gamma = False, sharpen = False, eqHistogram = False)
       #plt.savefig(f'{outputFileName}.jpg', bbox_inches='tight')
     plt.show()
 
-    cv2.imwrite(f'./output/{outputFileName}.jpg', outputImage)
+    cv2.imwrite(f'../output/{outputFileName}.jpg', cv2.cvtColor(outputImage, cv2.COLOR_RGB2BGR))
 
 if __name__ == "__main__":
   laplacian, gamma, sharpen, hist = False, False, False, False
